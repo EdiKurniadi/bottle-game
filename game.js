@@ -5,6 +5,9 @@ class Game{
 		this.glasses = [new Glass(a), new Glass(b), new Glass(c)];
 		this.history = [];
 		this.selectedGlass = -1;
+		this.targetGlass = -1;
+		this.animateGlass = -1;
+		this.waterLineState = false;
 	}
 
 	initialize() {
@@ -13,6 +16,7 @@ class Game{
 
 	selectGlass(indexGlass) {
 		this.selectedGlass = indexGlass;
+		this.animateGlass = indexGlass;
 	}
 
 	unselectGlass() {
@@ -32,34 +36,65 @@ class Game{
 	fill() {
 		this.history.push(this.getGlassesVolume());
 		this.glasses[this.selectedGlass].fillUntilFull();
-		// if(this.isTargetAchieved()) this.updateLevel();
 	}
 
 	clear() {
 		this.history.push(this.getGlassesVolume());
 		this.glasses[this.selectedGlass].clearUntilEmpty();
-		// if(this.isTargetAchieved()) this.updateLevel();
 	}
 
 	transfer(toIndexGlass) {
 		this.history.push(this.getGlassesVolume());
-		let amountTransferred = this.glasses[toIndexGlass].capacity - this.glasses[toIndexGlass].volume;
-		if(this.glasses[this.selectedGlass].volume < amountTransferred) {
-			amountTransferred = this.glasses[this.selectedGlass].volume
+		this.targetGlass = toIndexGlass;
+
+		if(toIndexGlass > this.selectedGlass) {
+			this.glasses[this.selectedGlass].rotationCenter = 'left';	
+			let midPointX = this.glasses[toIndexGlass].position.x - this.glasses[toIndexGlass].width / 2;
+			let midPointY = this.glasses[toIndexGlass].position.y - 50;
+			this.glasses[this.selectedGlass].move({x:midPointX,y:midPointY});
+			this.glasses[this.selectedGlass].lean();
+		};
+
+		if(toIndexGlass < this.selectedGlass) {
+			this.glasses[this.selectedGlass].rotationCenter = 'right';	
+			let midPointX = this.glasses[toIndexGlass].position.x + this.glasses[toIndexGlass].width / 2;
+			let midPointY = this.glasses[toIndexGlass].position.y - 50;
+			this.glasses[this.selectedGlass].move({x:midPointX,y:midPointY});
+			this.glasses[this.selectedGlass].lean();
 		}
 
-		// let midPointX = this.glasses[toIndexGlass].position.x + this.glasses[toIndexGlass].width / 2;
-		// let midPointY = this.glasses[toIndexGlass].position.y - 50;
-		// this.glasses[this.selectedGlass].move({x:midPointX,y:midPointY});
-		// if(toIndexGlass > this.selectedGlass) this.glasses[this.selectedGlass].rotationCenter = 'left';
-		// if(toIndexGlass < this.selectedGlass) this.glasses[this.selectedGlass].rotationCenter = 'right';
-		// this.glasses[this.selectedGlass].lean(-Math.PI/4);
+	}
 
-		this.glasses[toIndexGlass].fill(amountTransferred);
-		this.glasses[this.selectedGlass].clear(amountTransferred);
+	watchSelectedGlass() { //action after transfer
+		if(this.animateGlass > -1) {
+			if(this.glasses[this.animateGlass].isPoured()) {
+				this.glasses[this.animateGlass].back();
+				this.glasses[this.animateGlass].startPourState = false;
+				this.waterLineState = false;
+				this.animateGlass = -1;
+				return;
+			};
 
-		// if(this.isTargetAchieved()) this.updateLevel();
+			if(this.glasses[this.animateGlass].isLeaned()) {
+				
+				let amountTransferred = this.glasses[this.targetGlass].capacity - this.glasses[this.targetGlass].volume;
+				if(this.glasses[this.animateGlass].volume < amountTransferred) {
+					amountTransferred = this.glasses[this.animateGlass].volume
+				}
+				this.glasses[this.targetGlass].fill(amountTransferred);
+				this.glasses[this.animateGlass].clear(amountTransferred);
+				this.glasses[this.animateGlass].startPourState = true;
 
+				this.waterLineState = true;
+
+				return;
+			};
+
+			if(this.glasses[this.animateGlass].isMoved()) {
+				this.glasses[this.animateGlass].lean();
+				return;
+			};
+		}
 	}
 
 	isTargetAchieved() {
@@ -91,8 +126,3 @@ class Game{
 		}
 	}
 }
-
-// let game = new Game(7,7,11);
-// console.log(game.data.getTargetLevel());
-// console.log(game.data.currentLevel);
-// console.log(game.data.getAllLevelState());

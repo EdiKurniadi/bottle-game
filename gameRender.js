@@ -11,9 +11,9 @@ class GameRender {
 		this.targetPos;
 		this.levelPos;
 		this.spacingTextToGlass;
-		this.moveAnimationSpeed = 0.02;
-		this.angleAnimationSpeed = 0.001;
-		this.volumeAnimationSpeed = 0.006;
+		this.moveAnimationSpeed = 0.3;
+		this.angleAnimationSpeed = 0.002;
+		this.volumeAnimationSpeed = 0.004;
 		this.animateState = false;
 		this.initialize();
 		this.setupEventListeners();
@@ -77,158 +77,88 @@ class GameRender {
 		
 		this.drawWater(0);
 		this.drawGlass(0);
+		this.drawPointerCapacity(0);
+		this.drawPointerVolume(0);
 
 		this.drawWater(1);
 		this.drawGlass(1);
+		this.drawPointerCapacity(1);
+		this.drawPointerVolume(1);
 		
 		this.drawWater(2);
 		this.drawGlass(2);
-
-		this.drawPointerCapacity(0);
-		this.drawPointerCapacity(1);
 		this.drawPointerCapacity(2);
-
-		this.drawPointerVolume(0);
-		this.drawPointerVolume(1);
 		this.drawPointerVolume(2);
 
-
+		if(this.game.waterLineState) this.drawWaterLine();
 
 		this.drawUndoButton();
 		if(this.game.selectedGlass >= 0) this.drawTempButtons(this.game.selectedGlass);
 
 		this.drawTarget();
 		this.drawLevel();
-		// console.log('tes')
+
+
 	}
 
-	animate(elapsedTime) {
-		this.animateGlassPosition(0, elapsedTime);
-		this.animateGlassPosition(1, elapsedTime);
-		this.animateGlassPosition(2, elapsedTime);
+	update(elapsedTime) {
+		this.updateGlassPosition(0, elapsedTime);
+		this.updateGlassPosition(1, elapsedTime);
+		this.updateGlassPosition(2, elapsedTime);
 
-		// this.animateGlassAngle(0, elapsedTime);
-		// this.animateGlassAngle(1, elapsedTime);
-		// this.animateGlassAngle(2, elapsedTime);
+		this.updateGlassAngle(0, elapsedTime);
+		this.updateGlassAngle(1, elapsedTime);
+		this.updateGlassAngle(2, elapsedTime);
 
-		this.animateWater(0, elapsedTime);
-		this.animateWater(1, elapsedTime);
-		this.animateWater(2, elapsedTime);
+		this.updateWaterVolume(0, elapsedTime);
+		this.updateWaterVolume(1, elapsedTime);
+		this.updateWaterVolume(2, elapsedTime);
 	}
 
 	clearCanvas() {
 		this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
 	}
 
-
-
-	getCornerGlass(glassIndex) {
-		//posisi gelas tanpa dimiringkan
-		let b_corner1 = this.game.glasses[glassIndex].position;
-		let b_corner2 = {x:this.game.glasses[glassIndex].position.x, y: this.game.glasses[glassIndex].position.y + this.game.glasses[glassIndex].height};
-		let b_corner3 = {x:this.game.glasses[glassIndex].position.x + this.game.glasses[glassIndex].width, y: this.game.glasses[glassIndex].position.y + this.game.glasses[glassIndex].height};
-		let b_corner4 = {x:this.game.glasses[glassIndex].position.x + this.game.glasses[glassIndex].width, y: this.game.glasses[glassIndex].position.y};
-		
-		//posisi gelas sudah dimiringkan
-		if(this.game.glasses[glassIndex].rotationCenter == 'right') {
-			let f_corner1 = b_corner1;
-			let f_corner2 = {
-					x : (b_corner2.x-b_corner1.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner2.y-b_corner1.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner1.x,
-					y : (b_corner2.x-b_corner1.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner2.y-b_corner1.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner1.y,
-				};
-			let f_corner3 = {
-					x : (b_corner3.x-b_corner1.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner3.y-b_corner1.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner1.x,
-					y : (b_corner3.x-b_corner1.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner3.y-b_corner1.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner1.y,
-				};
-			let f_corner4 = {
-					x : (b_corner4.x-b_corner1.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner4.y-b_corner1.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner1.x,
-					y : (b_corner4.x-b_corner1.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner4.y-b_corner1.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner1.y,
-				};
-			return [f_corner1,f_corner2,f_corner3,f_corner4];
-		}
-
-		if(this.game.glasses[glassIndex].rotationCenter == 'left') {
-			let f_corner1 = {
-					x : (b_corner1.x-b_corner4.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner1.y-b_corner4.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner4.x,
-					y : (b_corner1.x-b_corner4.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner1.y-b_corner4.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner4.y,
-				};
-			let f_corner2 = {
-					x : (b_corner2.x-b_corner4.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner2.y-b_corner4.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner4.x,
-					y : (b_corner2.x-b_corner4.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner2.y-b_corner4.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner4.y,
-				};
-			let f_corner3 = {
-					x : (b_corner3.x-b_corner4.x)*Math.cos(this.game.glasses[glassIndex].angle) - (b_corner3.y-b_corner4.y)*Math.sin(this.game.glasses[glassIndex].angle) + b_corner4.x,
-					y : (b_corner3.x-b_corner4.x)*Math.sin(this.game.glasses[glassIndex].angle) + (b_corner3.y-b_corner4.y)*Math.cos(this.game.glasses[glassIndex].angle) + b_corner4.y,
-				};	
-			let f_corner4 = b_corner4;
-			return [f_corner1,f_corner2,f_corner3,f_corner4];
-		}
-
-	}
-
 	drawGlass(glassIndex) {
 		this.ctx.beginPath();
     	this.ctx.strokeStyle = "red";
     	this.ctx.lineWidth = 3;
-		let corners = this.getCornerGlass(glassIndex);
+		let corners = this.game.glasses[glassIndex].getCornerGlass();
 		this.ctx.moveTo(corners[0].x, corners[0].y);
 		for (let i = 1; i < corners.length; i++) {
 		    this.ctx.lineTo(corners[i].x, corners[i].y);
 		}
 		this.ctx.stroke();	
 		this.ctx.closePath();
-    	// let x_pos = this.game.glasses[glassIndex].position.x;
-    	// let y_pos = this.game.glasses[glassIndex].position.y;
-    	// let width = this.game.glasses[glassIndex].width;
-    	// let height = this.game.glasses[glassIndex].height;
-    	// this.ctx.strokeRect(x_pos, y_pos, width, height);
 	}
 
-	animateGlassPosition(glassIndex, elapsedTime) {
+	updateGlassPosition(glassIndex, elapsedTime) {
 		
 		let distToDest = this.game.glasses[glassIndex].distToDest();
-		// console.log(distToDest)
 		if(distToDest !== 0 ) {
 			this.animateState = true;
-		    let progress = Math.min(this.moveAnimationSpeed*elapsedTime/distToDest, 1); // Batasi nilai progress antara 0 dan 1
-		    // console.log(progress)
+		    let progress = Math.min(this.moveAnimationSpeed*elapsedTime/Math.abs(distToDest), 1); // Batasi nilai progress antara 0 dan 1
 		    this.game.glasses[glassIndex].position.x = this.game.glasses[glassIndex].position.x + (this.game.glasses[glassIndex].destPosition.x - this.game.glasses[glassIndex].position.x) * progress;
 		    this.game.glasses[glassIndex].position.y = this.game.glasses[glassIndex].position.y + (this.game.glasses[glassIndex].destPosition.y - this.game.glasses[glassIndex].position.y) * progress;
 			if(progress === 1) this.animateState = false;
 		}
 	}
 
-	// animateGlassAngle(glassIndex, elapsedTime) {
-	// 	let angleToDest = this.game.glasses[glassIndex].angleToDest();
-	// 	if(angleToDest !== 0 ) {
-	// 		this.animateState = true;
-	// 	    let progress = Math.min(this.angleAnimationSpeed*elapsedTime/Math.abs(angleToDest), 1); // Batasi nilai progress antara 0 dan 1
-	// 	    this.game.glasses[glassIndex].angle = this.game.glasses[glassIndex].angle + (this.game.glasses[glassIndex].destAngle - this.game.glasses[glassIndex].angle) * progress;
-	// 		if(progress === 1) this.animateState = false;
-	// 	}
-	// }
-
-	getCornersWater(glassIndex) {
-		let cornersGlass = this.getCornerGlass(glassIndex);
-		let midBottomGlass = (cornersGlass[1].y + cornersGlass[2].y)*0.5;
-		let midUpperGlass = (cornersGlass[0].y + cornersGlass[3].y)*0.5;
-		let midPointWater = midBottomGlass*(1-this.game.glasses[glassIndex].volume/this.game.glasses[glassIndex].capacity) +  midUpperGlass*(this.game.glasses[glassIndex].volume/this.game.glasses[glassIndex].capacity)
-		let cornerWaterLeft = (midPointWater-cornersGlass[0].y)/(cornersGlass[1].y-cornersGlass[0].y)*(cornersGlass[1].x-cornersGlass[0].x)+cornersGlass[0].x;
-		let cornerWaterRight = (midPointWater-cornersGlass[2].y)/(cornersGlass[3].y-cornersGlass[2].y)*(cornersGlass[3].x-cornersGlass[2].x)+cornersGlass[2].x;
-		let corner1 = {x:cornerWaterLeft, y:midPointWater};
-		let corner2 = cornersGlass[1];
-		let corner3 = cornersGlass[2];
-		let corner4 = {x:cornerWaterRight, y:midPointWater};
-		// console.log(midPointWater)
-		return [corner1, corner2, corner3, corner4];
-
+	updateGlassAngle(glassIndex, elapsedTime) {
+		let angleToDest = this.game.glasses[glassIndex].angleToDest();
+		let distToDest = this.game.glasses[glassIndex].distToDest(); // pakai distToDest biar sinkron dengan perpindahan gelas
+		if(angleToDest !== 0 ) {
+			this.animateState = true;
+		    let progress = Math.min(this.moveAnimationSpeed*elapsedTime/Math.abs(distToDest), 1); // pakai progress move animation biar sinkron dengan perpindahan gelas
+		    this.game.glasses[glassIndex].angle = this.game.glasses[glassIndex].angle + (this.game.glasses[glassIndex].destAngle - this.game.glasses[glassIndex].angle) * progress;
+			if(progress === 1) this.animateState = false;
+		}
 	}
-
 
 	drawWater(glassIndex) {
 		this.ctx.beginPath();
     	this.ctx.fillStyle = "blue";
-		let corners = this.getCornersWater(glassIndex);
+		let corners = this.game.glasses[glassIndex].getCornersWater();
 		this.ctx.moveTo(corners[0].x, corners[0].y);
 		for (let i = 1; i < corners.length; i++) {
 		    this.ctx.lineTo(corners[i].x, corners[i].y);
@@ -237,7 +167,7 @@ class GameRender {
 		this.ctx.closePath();
 	}
 
-	animateWater(glassIndex, elapsedTime) {
+	updateWaterVolume(glassIndex, elapsedTime) {
 		let volToDest = this.game.glasses[glassIndex].volToDest();
 		if(volToDest !== 0) {
 			this.animateState = true;
@@ -248,6 +178,23 @@ class GameRender {
 		}
 	}
 
+	drawWaterLine() {
+		let upPoint;
+		if(this.game.glasses[this.game.animateGlass].rotationCenter == 'left') {
+			upPoint = this.game.glasses[this.game.animateGlass].getCornerGlass()[3];
+		} else {
+			upPoint = this.game.glasses[this.game.animateGlass].getCornerGlass()[0];
+		}
+		let bottomPoint = this.game.glasses[this.game.targetGlass].getCornerGlass()[1];
+
+		this.ctx.beginPath();
+		this.ctx.moveTo(upPoint.x, upPoint.y);
+		this.ctx.lineTo(upPoint.x,bottomPoint.y);
+		this.ctx.strokeStyle = 'blue';
+		this.ctx.stroke();
+		this.ctx.closePath();
+	}
+
 	drawPointerVolume(glassIndex) {
 		let text = this.game.glasses[glassIndex].volume;
 		if(text % 1 !== 0) text =text.toFixed(2);
@@ -256,7 +203,7 @@ class GameRender {
 	    this.ctx.font = "18px Arial";
 	    let textWidth = this.ctx.measureText(text).width;
 	    let textX = this.game.glasses[glassIndex].position.x + this.game.glasses[glassIndex].width + this.spacingTextToGlass;
-	    let textY = this.getCornersWater(glassIndex)[0].y + 5
+	    let textY = this.game.glasses[glassIndex].getCornersWater()[0].y + 5
 	    this.ctx.fillText(text, textX, textY); 
 	}
 
@@ -293,7 +240,6 @@ class GameRender {
 
 
 	getTempButtonsPos(glassIndex) {
-		// console.log('indek gelas', glassIndex)
 		let button1pos = {x:this.game.glasses[glassIndex].position.x + 0.5*this.game.glasses[glassIndex].width - (1*this.tempButtonSize.width + 0.5*this.tempButtonSpacing), y: this.game.glasses[glassIndex].position.y + this.game.glasses[glassIndex].height + 0*this.tempButtonSize.height + 2*this.tempButtonSpacing }
 		let button2pos = {x:this.game.glasses[glassIndex].position.x + 0.5*this.game.glasses[glassIndex].width + (0*this.tempButtonSize.width + 0.5*this.tempButtonSpacing), y: this.game.glasses[glassIndex].position.y + this.game.glasses[glassIndex].height + 0*this.tempButtonSize.height + 2*this.tempButtonSpacing }
 		let button3pos = {x:this.game.glasses[glassIndex].position.x + 0.5*this.game.glasses[glassIndex].width - (1*this.tempButtonSize.width + 0.5*this.tempButtonSpacing), y: this.game.glasses[glassIndex].position.y + this.game.glasses[glassIndex].height + 1*this.tempButtonSize.height + 3*this.tempButtonSpacing }
@@ -347,13 +293,12 @@ class GameRender {
 }
 
 
-let game = new Game(8,14,13);
+let game = new Game(2,4,7);
 let gameRender = new GameRender(game);
 
 
 let startTime;
 function animate(time) {
-
     if(game.isTargetAchieved()) game.updateLevel();
     if(game.isFinish()) {
     	gameRender.canvas.style.display = 'none';
@@ -366,7 +311,8 @@ function animate(time) {
     let elapsedTime = time - startTime;
 	startTime = time;
 
-    gameRender.animate(elapsedTime);
+	game.watchSelectedGlass();
+    gameRender.update(elapsedTime);
 	gameRender.render();
     requestAnimationFrame(animate);
 }

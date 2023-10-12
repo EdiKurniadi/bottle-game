@@ -7,17 +7,18 @@ class InputManager {
 
   setupEventListeners() {
     this.gameRender.canvas.addEventListener("click", (event) => {
-      // console.log(this.isClickInsideGlass(1, event))
-      if(this.isClickInsideGlass(0, event)) {
-         this.game.selectedGlass === 0 ? this.game.unselectGlass() : this.game.selectGlass(0);
-      };
+      if(!this.gameRender.animateState) {
+        if(this.isClickInsideGlass(0, event)) {
+           this.game.selectedGlass === 0 ? this.game.unselectGlass() : this.game.selectGlass(0);
+        };
 
-      if(this.isClickInsideGlass(1, event)) {
-         this.game.selectedGlass === 1 ? this.game.unselectGlass() : this.game.selectGlass(1);
-      };
+        if(this.isClickInsideGlass(1, event)) {
+           this.game.selectedGlass === 1 ? this.game.unselectGlass() : this.game.selectGlass(1);
+        };
 
-      if(this.isClickInsideGlass(2, event)) {
-         this.game.selectedGlass === 2 ? this.game.unselectGlass() : this.game.selectGlass(2);
+        if(this.isClickInsideGlass(2, event)) {
+           this.game.selectedGlass === 2 ? this.game.unselectGlass() : this.game.selectGlass(2);
+        };        
       };
 
       if(this.game.selectedGlass > -1 && !this.gameRender.animateState) {
@@ -32,13 +33,13 @@ class InputManager {
         }
 
         if(this.isClickTempButtons(2, event)) {
-          let IndexUnselectedGlass = this.game.getIndexUnselectedGlasses()[0]
+          let IndexUnselectedGlass = this.game.getIndexUnselectedGlasses()[0];
           this.game.transfer(IndexUnselectedGlass);
           this.game.unselectGlass();
         }
 
         if(this.isClickTempButtons(3, event)) {
-          let IndexUnselectedGlass = this.game.getIndexUnselectedGlasses()[1]
+          let IndexUnselectedGlass = this.game.getIndexUnselectedGlasses()[1];
           this.game.transfer(IndexUnselectedGlass);
           this.game.unselectGlass();
         }
@@ -47,10 +48,8 @@ class InputManager {
 
       if(this.isClickUndoButton(event)) {
         this.game.undo();
+        this.gameRender.animateState = false;
       }
-
-      // console.log(this.game.selectedGlass)
-
 
     });
   }

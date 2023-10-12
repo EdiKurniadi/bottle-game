@@ -150,3 +150,8 @@ class Level{
     return allLevel
   }
 }
+
+
+// let level = new Level(7,11,11);
+// level.BFS();
+// console.log(level.getSortedStateAtLevel(20))
